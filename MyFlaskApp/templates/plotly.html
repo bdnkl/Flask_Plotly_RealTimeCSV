@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"
+        integrity="sha256-bQmrZe4yPnQrLTY+1gYylfNMBuGfnT/HKsCGX+9Xuqo=" crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <title>Plotly</title>
+</head>
+
+<body>
+    <div id="plotlyChart"></div>
+    <script>
+        var socket = io.connect('localhost:7777');
+
+        var data = [{
+            type: 'line'
+        }];
+
+        var layout = {
+            title: 'Updating Plot',
+            xaxis: {
+                title: 'Time'
+            },
+            yaxis: {
+                title: 'Speed'
+            }
+        };
+        plotly = Plotly.newPlot('plotlyChart', data, layout);
+
+        socket.on('connect', function () {
+            socket.send('User has connected!')
+        });
+
+        socket.on('requestedData', function (data) {
+            console.log(data[0])
+            Plotly.update('plotlyChart', {
+                x: [data[0]],
+                y: [data[1]],
+                type: 'line'
+            });
+        });
+
+        setInterval(function () {
+            socket.send('dataRequest')
+        }, 1000);
+
+    </script>
+
+
+    <div id="socketio">
+        <script>
+
+        </script>
+    </div>
+
+</body>
+
+</html>
