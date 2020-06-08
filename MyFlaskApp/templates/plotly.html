@@ -2,61 +2,62 @@
 <html lang="en">
 
 <head>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"
-        integrity="sha256-bQmrZe4yPnQrLTY+1gYylfNMBuGfnT/HKsCGX+9Xuqo=" crossorigin="anonymous"></script>
-    <meta charset="UTF-8">
-    <title>Plotly</title>
+	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+		integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+		crossorigin="anonymous"></script>
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"
+		integrity="sha256-bQmrZe4yPnQrLTY+1gYylfNMBuGfnT/HKsCGX+9Xuqo=" crossorigin="anonymous"></script>
+	<meta charset="UTF-8">
+	<title>Plotly</title>
 </head>
 
 <body>
-    <div id="plotlyChart"></div>
-    <script>
-        var socket = io.connect('localhost:7777');
+	<div id="diplayData">
+		<p>
+			{{ session['data'] }}
+		</p>
+	</div>
+	<div id="plotlyChart"></div>
+	<script>
+		var plotlyChar = document.getElementById('plotlyChart')
+		var socket = io.connect('localhost:7777');
 
-        var data = [{
-            type: 'line'
-        }];
+		var data = [{
+			type: 'line'
+		}];
 
-        var layout = {
-            title: 'Updating Plot',
-            xaxis: {
-                title: 'Time'
-            },
-            yaxis: {
-                title: 'Speed'
-            }
-        };
-        plotly = Plotly.newPlot('plotlyChart', data, layout);
+		var layout = {
+			title: 'Updating Plot',
+			autosize: true,
+			type: 'line',
+			xaxis: {
+				title: 'Time',
+				type: 'time',
+				tickformat: '%H:%M:%S.%f',
+				rangeslider: true,
+				nticks: 30
+			},
+			yaxis: {
+				title: 'Speed'
+			}
+		};
+		plotly = Plotly.newPlot(plotlyChart, data, layout);
 
-        socket.on('connect', function () {
-            socket.send('User has connected!')
-        });
+		socket.on('requestedData', function (data) {
+			Plotly.update(plotlyChart, {
+				x: [data[0]],
+				y: [data[1]]
+			});
+			// Plotly.relayout(plotlyChart, 'xaxis.rangeslider.range', [500, -1]);
+		});
 
-        socket.on('requestedData', function (data) {
-            console.log(data[0])
-            Plotly.update('plotlyChart', {
-                x: [data[0]],
-                y: [data[1]],
-                type: 'line'
-            });
-        });
-
-        setInterval(function () {
-            socket.send('dataRequest')
-        }, 1000);
-
-    </script>
+		setInterval(function () {
+			socket.send('dataRequest')
+		}, 1000);
 
 
-    <div id="socketio">
-        <script>
-
-        </script>
-    </div>
+	</script>
 
 </body>
 

@@ -1,9 +1,10 @@
 import pandas as pd
-from flask import Flask, render_template
-from flask_socketio import SocketIO, send, emit
+from flask import Flask, render_template, session
+from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
-socketio = SocketIO(app, logger=False)
+app.config['SECRET_KEY'] = 'my secret key'
+socketio = SocketIO(app)
 
 
 @app.route('/')
@@ -13,10 +14,11 @@ def plotly():
 
 @socketio.on('message')
 def handleMessage(msg):
-    send(msg, broadcast=True)
     if msg == 'dataRequest':
-        data = pd.read_csv('../data/data.csv', sep=';', header=None).to_dict('list')
-        emit('requestedData', data)
+        data = pd.read_csv('../data/data.csv', sep=';', header=None)
+        data[0] = pd.to_datetime(data[0], unit='s')
+        data[0] = data[0].dt.strftime('%H:%M:%S')
+        emit('requestedData', data.to_dict('list'))
 
 
 if __name__ == '__main__':
